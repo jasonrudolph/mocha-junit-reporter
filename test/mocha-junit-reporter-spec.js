@@ -340,18 +340,41 @@ describe('mocha-junit-reporter', function() {
 
       expect(reporter._testsuites).to.have.lengthOf(3);
       expect(reporter._testsuites[1].testsuite[0]._attr.name).to.equal('failing beforeAll');
-      expect(reporter._testsuites[1].testsuite[1].testcase).to.have.lengthOf(2);
+      expect(reporter._testsuites[1].testsuite).to.have.lengthOf(2);
 
-      var failureMessage = 'failing beforeAll "before all" hook: failing hook';
-      if (!['2', '3', '4', '5'].includes(mochaVersion)) {
-        // newer versions of Mocha include the name of the test in the message
-        failureMessage += ' for "test 1"';
-      }
-      expect(reporter._testsuites[1].testsuite[1].testcase[0]._attr.name).to.equal(failureMessage);
+      expect(reporter._testsuites[1].testsuite[1].testcase).to.have.lengthOf(2);
+      expect(reporter._testsuites[1].testsuite[1].testcase[0]._attr.name).to.equal('failing beforeAll test 1');
+      expect(reporter._testsuites[1].testsuite[1].testcase[0]._attr.classname).to.equal('test 1');
       expect(reporter._testsuites[1].testsuite[1].testcase[1].failure._attr.message).to.equal('error in before');
       expect(reporter._testsuites[2].testsuite[0]._attr.name).to.equal('good suite');
       expect(reporter._testsuites[2].testsuite[1].testcase).to.have.lengthOf(1);
       expect(reporter._testsuites[2].testsuite[1].testcase[0]._attr.name).to.equal('good suite test 2');
+      expect(reporter._testsuites[2].testsuite[1].testcase[0]._attr.classname).to.equal('test 2');
+      done();
+    });
+  });
+
+  it('properly outputs tests when error in beforeEach', function(done) {
+    var reporter = createReporter();
+    var rootSuite = reporter.runner.suite;
+    var suite1 = Suite.create(rootSuite, 'failing beforeEach');
+    suite1.beforeEach('failing hook', function() {
+      throw new Error('error in before');
+    });
+    suite1.addTest(createTest('test 1'));
+    suite1.addTest(createTest('test 2'));
+
+    runRunner(reporter.runner, function() {
+      if (reporter.runner.dispose) {
+        reporter.runner.dispose();
+      }
+
+      expect(reporter._testsuites).to.have.lengthOf(2);
+      expect(reporter._testsuites[1].testsuite[0]._attr.name).to.equal('failing beforeEach');
+      expect(reporter._testsuites[1].testsuite).to.have.lengthOf(2);
+      expect(reporter._testsuites[1].testsuite[1].testcase[0]._attr.name).to.equal('failing beforeEach test 1');
+      expect(reporter._testsuites[1].testsuite[1].testcase[0]._attr.classname).to.equal('test 1');
+      expect(reporter._testsuites[1].testsuite[1].testcase[1].failure._attr.message).to.equal('error in before');
       done();
     });
   });

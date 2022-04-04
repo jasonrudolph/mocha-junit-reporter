@@ -191,6 +191,25 @@ function getJenkinsClassname (test, options) {
   return titles.join(options.suiteTitleSeparatedBy);
 }
 
+// TODO: Docs
+function getStableTestName(test) {
+  if (test.parent && test.ctx && test.ctx.currentTest) {
+    return test.parent.title + " " + test.ctx.currentTest.title;
+  } else {
+    return test.fullTitle();
+  }
+}
+
+// TODO: Docs
+function getStableClassname(test) {
+  if (test.ctx && test.ctx.currentTest) {
+    return test.ctx.currentTest.title;
+  } else {
+    return test.title;
+  }
+}
+
+
 /**
  * JUnit reporter for mocha.js.
  * @module mocha-junit-reporter
@@ -320,8 +339,8 @@ MochaJUnitReporter.prototype.getTestsuiteData = function(suite) {
 MochaJUnitReporter.prototype.getTestcaseData = function(test, err) {
   var jenkinsMode = this._options.jenkinsMode;
   var flipClassAndName = this._options.testCaseSwitchClassnameAndName;
-  var name = stripAnsi(jenkinsMode ? getJenkinsClassname(test, this._options) : test.fullTitle());
-  var classname = stripAnsi(test.title);
+  var name = stripAnsi(jenkinsMode ? getJenkinsClassname(test, this._options) : getStableTestName(test));
+  var classname = stripAnsi(getStableClassname(test));
   var testcase = {
     testcase: [{
       _attr: {
